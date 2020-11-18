@@ -46,7 +46,7 @@ class Scheduler:
                     tm['w_id'] = 0
                     while tm['w_id'] == 0:
                         if workers[c]['slots'] > 0:
-                            tm['w_id'] = worker[x]['worker_id']
+                            tm['w_id'] = worker[c]['worker_id']
                             total_free_slots -= 1
                             break
                         else:
