@@ -23,14 +23,17 @@ class Scheduler:
         while total_free_slots > 0 :
             for task in tasks:
                 if task.depends_on == []:
+                    tm = {}
+                    tm['task'] = task.task_id
+                    tm['w_id'] = 0
                     x = random.randrange(1,5)
-                    if workers[x]['slots'] > 0:
-                        tm = {}
-                        tm['w_id'] = worker[x]['worker_id']
-                        tm['task'] = task.task_id
-                        task_mapping.append(tm)
-                        total_free_slots -= 1
-
+                    while tm['w_id'] == 0:
+                        if workers[x]['slots'] > 0:
+                            tm['w_id'] = worker[x]['worker_id']
+                            tm['task'] = task.task_id
+                            task_mapping.append(tm)
+                            total_free_slots -= 1
+                        x = random.randrange(1,5)
         return task_mapping
 
     @staticmethod
@@ -48,10 +51,7 @@ class Scheduler:
                         if workers[c]['slots'] > 0:
                             tm['w_id'] = worker[c]['worker_id']
                             total_free_slots -= 1
-                            break
-                        else:
-                            c = (c+1)%len(self.workers)
-
+                        c = (c+1)%len(self.workers)
         return task_mapping
 
     @staticmethod
@@ -140,9 +140,12 @@ class Master:
         self.job_pool.put(job)
 
     def worker_listener(self, conn):
+        # Modifies the status for completed tasks in job['tasks'] and task_pool
+        # use update_worker_params()
         pass
 
     def update_worker_params(self, worker):
+        # Shouldn't this have something to indicate whether we need to +/- slots?
         pass
 
     def run(self):
@@ -152,6 +155,7 @@ class Master:
         pass
 
     def send_task(self, task_mapping, conn):
+        # use update_worker_params() to do worker['slots'] -= 1
         pass
 
 if __name__ == '__main__':
@@ -167,6 +171,7 @@ if __name__ == '__main__':
 
     while job.empty()==False:
         job = master.job_pool.get()
+        master.start_job()
 
         # Put tasks for this job  into task pool here?
         for task in job['tasks']:
@@ -174,4 +179,5 @@ if __name__ == '__main__':
 
         while job['status'] != 1:
             task_mapping = self.scheduler(task_pool, self.workers)
+            send_task(task_mapping, conn)
             # How do I get connections?
