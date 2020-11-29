@@ -1,4 +1,5 @@
-"""Master node
+"""
+Master Node
 This program runs on the master.
 """
 from threading import Thread
