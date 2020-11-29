@@ -8,6 +8,7 @@ import socket
 import json
 import random
 import time
+import sys
 
 class Status(Enum):
     SUCCESS = 1
@@ -119,7 +120,7 @@ class Master:
         with open(config_path, 'r') as cfg_file:
             config = json.load(cfg_file)
         # for now I will not use a separate worker class, as this is simpler
-        self.workers = config['Workers']
+        self.workers = config['workers']
         for w in self.workers:
             w['free_slot_count'] = w['slots']
         
@@ -141,12 +142,11 @@ class Master:
         #self.worker_conn_info = self.establish_connection(self.worker_sock,0)
 
         #self.connections.extend([self.request_conn_info, self.worker_conn_info])
-        self.request_thread = Thread(target=self.request_listener, \
-                                     args=(self.request_sock,))
+        self.request_thread = Thread(target=self.request_listener)
         self.request_thread.start()
 
-        self.worker_thread = Thread(target=self.worker_listener, \
-                                     args=(self.worker_sock,))
+        self.worker_thread = Thread(target=self.worker_listener)
+                                     
         self.worker_thread.start()
 
         #self.threads.extend([request_listener_thread, worker_listener_thread])
@@ -272,7 +272,7 @@ class Master:
     def request_listener(self):
 
         port= 5000
-        self.request_sock.bind('localhost',port)
+        self.request_sock.bind(('localhost',port))
         self.request_sock.listen(5)
         while(1):
             connection,addr=self.request_sock.accept()
@@ -283,9 +283,10 @@ class Master:
                 '''data = {'job_id': '0',
                 'map_tasks': [{'task_id': '0_M0', 'duration': 3}, {'task_id': '0_M1', 'duration': 3}, {'task_id': '0_M2', 'duration': 2}],
                 'reduce_tasks': [{'task_id': '0_R0', 'duration': 3}, {'task_id': '0_R1', 'duration': 3}]}'''
-                req = json.load(data)
+                data = json.loads(data)
+                #print(req)
                 job = {}
-                job['id'] = req['job_id']
+                job['id'] = data['job_id']
                 job['tasks'] = list()
 
                 maptasks=list()#stores maptask ids
@@ -327,7 +328,7 @@ class Master:
         s=self.worker_sock
         
         port= 5001
-        s.bind('localhost',port)
+        s.bind(('localhost',port))
         s.listen(5)
         while(1):
             connection,addr=s.accept()
@@ -377,7 +378,7 @@ class Master:
 
 
     #def start_job(self):
-        #pass
+        pass
 
     def send_task(self, task):
         wid=task['wid']
@@ -398,6 +399,8 @@ if __name__ == '__main__':
     # Context management protocol, all threads and connections
     # are automatically closed after it's done
 
-    with Master("path/to/config","round_robin_sheduler") as master:
+    '''config=sys.argv[1]
+    scheduler=sys.argv[2]'''
+    with Master("config.json","random") as master:
         master.run()
         
