@@ -14,9 +14,11 @@ import sys
                     task['depends']:None
                     task['satisfies']:redtasks
                     task['status']:Status(2)'''
-port=sys.argv[1]
+port=int(sys.argv[1])
 wid=sys.argv[2]
-def sleep(task):
+def pretend_sleep(task):
+    print(task)
+    print("I'm worker",wid,"Got some work...")
     #task['wid']=wid
     duration=task['duration']
     time.sleep(duration)#sleeps for duration
@@ -24,24 +26,38 @@ def sleep(task):
         s.connect(("localhost", 5001))
         message=json.dumps(task)#sends back the task to worker
         s.send(message.encode())
+        print("Completion Message sent!")
 
+'''
 def perform_task(s):
-        s.bind('localhost',port)
-        s.listen(5)
+    s.bind(('localhost',port))
+    s.listen(5)
+    while(1):
+        connection,addr=s.accept()
+        print("Connection accepted!")
         while(1):
-            connection,addr=s.accept()
-
-            while(1):
-                message=connection.recv(1024)
-                task=message.decode("utf-8")
+            message=connection.recv(1024)
+            if(len(message)!=0):
+                task=message.decode()
                 task=json.loads(task)
-                slot = Thread(target=sleep, args=(task),)#individual thread for each task
+                slot = Thread(target=pretend_sleep, args=(task,))#individual thread for each task
                 slot.start()
-                #time.sleep(task['duration'])
-
-
-if __name__ == '__main__':  
+            #time.sleep(task['duration'])
+'''
+def perform_task(s):
+    s.bind(('localhost',port))
+    s.listen(5)
+    connection,addr=s.accept()
+    print("Connection accepted!")
+    while(1):
+        message=connection.recv(1024)
+        if(len(message)!=0):
+            task=message.decode()
+            task=json.loads(task)
+            slot = Thread(target=pretend_sleep, args=(task,))#individual thread for each task
+            slot.start()
+            #time.sleep(task['duration'])
+if __name__ == '__main__':
     s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-    listener = Thread(target=perform_task, args=(s),)#thread to listen for jobs
+    listener = Thread(target=perform_task, args=(s,))#thread to listen for jobs
     listener.start()
-
