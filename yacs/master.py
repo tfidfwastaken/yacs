@@ -12,7 +12,8 @@ import random
 from signal import signal, SIGINT
 import socket
 import json
-import struct
+import time
+import csv
 
 from utils import TaskPool, Status
 
@@ -38,7 +39,7 @@ class Scheduler:
                     })
                     break
         return task_map_list
-                    
+
     def find_llw(w):
         max_wid = 0
         max_count = 0
@@ -67,27 +68,6 @@ class Scheduler:
                     w[worker] -= 1
             print("TASK MAPPING", task_mapping)
             print("MODIFIED :\n",w)
-        return task_mapping
-
-
-    @staticmethod
-    def least_loaded_scheduler(tasks, workers):
-        wks = workers
-        task_mapping = []
-        # need to find number of free slots
-        # find the least number
-        min_wid = 0
-        min_count = 0
-        for task in tasks:
-            for w in wks :
-                if w['free_slot_count'] < min_count :
-                    min_wid = w['worker_id']
-                    min_count = w['free_slot_count']
-                    w['free_slot_count'] -= 1
-            task_mapping.append({
-                'worker_id': w['worker_id'],
-                'task': task
-            })
         return task_mapping
 
     @staticmethod
@@ -136,6 +116,10 @@ class Master:
         self.schedule_event = Event()
         self.scheduler_lock = Lock()
         self.worker_lock = Lock()
+
+        # Job logs
+        self.file = open('job_log.csv', 'w', newline='')
+        self.job_log ={}
 
     # For context manager, establishes the connections and launches them in a new thread
     def __enter__(self):
@@ -205,12 +189,7 @@ class Master:
         with conn:
             while not self.exit_command_received.is_set():
                 logging.info(f"Listening for messages from {addr}")
-                raw_msglen = conn.recv(4)
-                if not raw_msglen:
-                    logging.error(f"Connection from worker {addr} broken")
-                    break
-                msglen = struct.unpack('!I', raw_msglen)[0]
-                worker_message = conn.recv(msglen).decode()
+                worker_message = conn.recv(4096).decode()
                 if not worker_message:
                     logging.error(f"Connection from worker {addr} broken")
                     break
@@ -237,7 +216,7 @@ class Master:
                     elif mode == "decrement":
                         worker['free_slot_count'] -= 1
         # logging.debug(f"update_worker_params:Workers:\n{PrettyLog(self.workers)}")
-                        
+
     # This part is a huge hack, proceed with caution
     def update_dependencies(self, task_map):
         task = task_map['task']
@@ -287,6 +266,9 @@ class Master:
 
     def start_job(self, job):
         logging.info(f"Starting job: {job['job_id']}")
+        self.job_log[job['job_id']]={}
+        self.job_log[job['job_id']]['start'] = time.time()
+
         tasks = self.parse_job_request(job)
         self.task_pool = TaskPool(tasks)
         # print(self.task_pool.is_empty())
@@ -317,6 +299,17 @@ class Master:
                 task_map = self.scheduler(tasks_to_schedule.tasks, self.workers)
             status = self.send_task(task_map)
         logging.info(f"Done with job {job['job_id']}")
+        self.job_log[job['job_id']]['stop']=time.time()
+        self.record_log(job['job_id'])
+        print('DONE WITH JOB ID : ',job['job_id'])
+
+    # To record the start and finish time for job in the csv
+    def record_log(self,jid):
+        with open(r'job_log.csv', 'a') as f:
+            writer = csv.writer(f)
+            start = self.job_log[jid]['start']
+            stop = self.job_log[jid]['stop']
+            writer.writerow([jid,start,stop])
 
     def send_task(self, task_map_list):
         logging.info("Sending tasks to workers...")

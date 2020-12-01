@@ -1,0 +1,32 @@
+INFO:root:Starting Worker...
+INFO:root:Waiting for tasks
+INFO:root:Connection to master successful
+INFO:root:Listening for tasks
+INFO:root:Received task: 0_M0 of job 0 at 1606859077.1579092
+INFO:root:Listening for tasks
+INFO:root:Finished task: 0_M0 of job 0 at 1606859081.1623647
+INFO:root:Task 0_M0 completed! Sending to Master...
+INFO:root:Received task: 0_R1 of job 0 at 1606859081.1655707
+INFO:root:Listening for tasks
+INFO:root:Finished task: 0_R1 of job 0 at 1606859083.1671493
+INFO:root:Task 0_R1 completed! Sending to Master...
+INFO:root:Received task: 2_M0 of job 2 at 1606859086.1808913
+INFO:root:Listening for tasks
+INFO:root:Received task: 2_M1 of job 2 at 1606859086.1811955
+INFO:root:Listening for tasks
+INFO:root:Finished task: 2_M0 of job 2 at 1606859091.1862347
+INFO:root:Task 2_M0 completed! Sending to Master...
+INFO:root:Finished task: 2_M1 of job 2 at 1606859093.1882277
+INFO:root:Task 2_M1 completed! Sending to Master...
+INFO:root:Received task: 2_R0 of job 2 at 1606859093.1915286
+INFO:root:Listening for tasks
+INFO:root:Received task: 2_R1 of job 2 at 1606859093.19188
+INFO:root:Listening for tasks
+INFO:root:Finished task: 2_R0 of job 2 at 1606859096.1950061
+INFO:root:Task 2_R0 completed! Sending to Master...
+INFO:root:Finished task: 2_R1 of job 2 at 1606859097.196595
+INFO:root:Task 2_R1 completed! Sending to Master...
+ERROR:root:Connection to master broken
+INFO:root:Exiting...
+DEBUG:root:Closed connection sockets
+DEBUG:root:Closed threads

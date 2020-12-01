@@ -1,0 +1,16 @@
+create_job_request	requests.py	/^def create_job_request(job_id):$/;"	f
+send_request	requests.py	/^def send_request(job_request):$/;"	f
+number_of_requests	requests.py	/^	number_of_requests=int(sys.argv[1])$/;"	v
+arrivals	requests.py	/^	arrivals = np.random.exponential(1, size=number_of_requests-1)$/;"	v
+request_number	requests.py	/^	request_number=0$/;"	v
+job_request	requests.py	/^	job_request=create_job_request(str(request_number))$/;"	v
+interval	requests.py	/^		interval=arrivals[request_number-1]$/;"	v
+job_request	requests.py	/^		job_request=create_job_request(str(request_number))$/;"	v
+last_request_time	requests.py	/^		last_request_time=time.time()$/;"	v
+tasks	test_utils.py	/^tasks = [$/;"	v
+test_taskpool_take	test_utils.py	/^def test_taskpool_take():$/;"	f
+test_taskpool_take_filter	test_utils.py	/^def test_taskpool_take_filter():$/;"	f
+test_taskpool_filter_take	test_utils.py	/^def test_taskpool_filter_take():$/;"	f
+test_update	test_utils.py	/^def test_update():$/;"	f
+update_func	test_utils.py	/^    def update_func(t, id_to_remove):$/;"	f	function:test_update
+test_remove	test_utils.py	/^def test_remove():$/;"	f

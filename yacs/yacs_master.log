@@ -1,0 +1,585 @@
+INFO:root:Starting request thread...
+INFO:root:Awaiting request connections...
+INFO:root:Starting worker threads...
+INFO:root:Awaiting worker 1...
+INFO:root:Connection with worker 1 accepted!
+INFO:root:Listening for messages from ('127.0.0.1', 4000)
+INFO:root:Awaiting worker 2...
+INFO:root:Connection with worker 2 accepted!
+INFO:root:Listening for messages from ('127.0.0.1', 4001)
+INFO:root:Awaiting worker 3...
+INFO:root:Connection with worker 3 accepted!
+INFO:root:Listening for messages from ('127.0.0.1', 4002)
+INFO:root:Waiting for Jobs...
+INFO:root:Request source connected! Awaiting data...
+DEBUG:root:request_listener:Got request:
+('{"job_id": "0", "map_tasks": [{"task_id": "0_M0", "duration": 4}, '
+ '{"task_id": "0_M1", "duration": 3}], "reduce_tasks": [{"task_id": "0_R0", '
+ '"duration": 2}, {"task_id": "0_R1", "duration": 2}]}')
+INFO:root:Received from job pool: 0
+INFO:root:Awaiting request connections...
+INFO:root:Starting job: 0
+INFO:root:Starting scheduler...
+DEBUG:root:Scheduled: ['0_M0', '0_M1']
+INFO:root:Sending tasks to workers...
+DEBUG:root:Mapped:
+[{'task': {'depends_on': [],
+           'duration': 4,
+           'job_id': '0',
+           'satisfies': ['0_R0', '0_R1'],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '0_M0'},
+  'worker_id': 1},
+ {'task': {'depends_on': [],
+           'duration': 3,
+           'job_id': '0',
+           'satisfies': ['0_R0', '0_R1'],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '0_M1'},
+  'worker_id': 3}]
+DEBUG:root:Sending to worker 1:
+{'depends_on': [],
+ 'duration': 4,
+ 'job_id': '0',
+ 'satisfies': ['0_R0', '0_R1'],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '0_M0'}
+DEBUG:root:Updating worker information...
+DEBUG:root:Sending to worker 3:
+{'depends_on': [],
+ 'duration': 3,
+ 'job_id': '0',
+ 'satisfies': ['0_R0', '0_R1'],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '0_M1'}
+DEBUG:root:Updating worker information...
+INFO:root:Waiting for more schedulable tasks...
+INFO:root:Request source connected! Awaiting data...
+DEBUG:root:request_listener:Got request:
+('{"job_id": "1", "map_tasks": [{"task_id": "1_M0", "duration": 1}, '
+ '{"task_id": "1_M1", "duration": 1}], "reduce_tasks": [{"task_id": "1_R0", '
+ '"duration": 2}, {"task_id": "1_R1", "duration": 1}]}')
+INFO:root:Awaiting request connections...
+INFO:root:Request source connected! Awaiting data...
+DEBUG:root:request_listener:Got request:
+('{"job_id": "2", "map_tasks": [{"task_id": "2_M0", "duration": 3}, '
+ '{"task_id": "2_M1", "duration": 4}], "reduce_tasks": [{"task_id": "2_R0", '
+ '"duration": 2}, {"task_id": "2_R1", "duration": 2}]}')
+INFO:root:Awaiting request connections...
+DEBUG:root:Received from worker ('127.0.0.1', 4002): {"worker_id": 3, "task": {"task_id": "0_M1", "duration": 0, "job_id": "0", "satisfies": ["0_R0", "0_R1"], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 0_M1...
+DEBUG:root:Removing depends_on for 0_R0
+DEBUG:root:Removing depends_on for 0_R1
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 4,
+  'job_id': '0',
+  'satisfies': ['0_R0', '0_R1'],
+  'status': <Status.SCHEDULED: 3>,
+  'task_id': '0_M0'},
+ {'depends_on': ['0_M0'],
+  'duration': 2,
+  'job_id': '0',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '0_R0'},
+ {'depends_on': ['0_M0'],
+  'duration': 2,
+  'job_id': '0',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '0_R1'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4002)
+INFO:root:Waiting for more schedulable tasks...
+INFO:root:Request source connected! Awaiting data...
+DEBUG:root:request_listener:Got request:
+('{"job_id": "3", "map_tasks": [{"task_id": "3_M0", "duration": 3}, '
+ '{"task_id": "3_M1", "duration": 2}], "reduce_tasks": [{"task_id": "3_R0", '
+ '"duration": 4}, {"task_id": "3_R1", "duration": 1}]}')
+INFO:root:Awaiting request connections...
+DEBUG:root:Received from worker ('127.0.0.1', 4000): {"worker_id": 1, "task": {"task_id": "0_M0", "duration": 0, "job_id": "0", "satisfies": ["0_R0", "0_R1"], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 0_M0...
+DEBUG:root:Removing depends_on for 0_R0
+DEBUG:root:Removing depends_on for 0_R1
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 2,
+  'job_id': '0',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '0_R0'},
+ {'depends_on': [],
+  'duration': 2,
+  'job_id': '0',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '0_R1'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4000)
+DEBUG:root:Scheduled: ['0_R0', '0_R1']
+INFO:root:Sending tasks to workers...
+DEBUG:root:Mapped:
+[{'task': {'depends_on': [],
+           'duration': 2,
+           'job_id': '0',
+           'satisfies': [],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '0_R0'},
+  'worker_id': 3},
+ {'task': {'depends_on': [],
+           'duration': 2,
+           'job_id': '0',
+           'satisfies': [],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '0_R1'},
+  'worker_id': 1}]
+DEBUG:root:Sending to worker 3:
+{'depends_on': [],
+ 'duration': 2,
+ 'job_id': '0',
+ 'satisfies': [],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '0_R0'}
+DEBUG:root:Updating worker information...
+DEBUG:root:Sending to worker 1:
+{'depends_on': [],
+ 'duration': 2,
+ 'job_id': '0',
+ 'satisfies': [],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '0_R1'}
+DEBUG:root:Updating worker information...
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4000): {"worker_id": 1, "task": {"task_id": "0_R1", "duration": 0, "job_id": "0", "satisfies": [], "depends_on": [], "status": 1}}
+DEBUG:root:Received from worker ('127.0.0.1', 4002): {"worker_id": 3, "task": {"task_id": "0_R0", "duration": 0, "job_id": "0", "satisfies": [], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 0_R0...
+DEBUG:root:Updating dependencies for task 0_R1...
+DEBUG:root:Updated task pool:
+[]
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 2,
+  'job_id': '0',
+  'satisfies': [],
+  'status': <Status.SCHEDULED: 3>,
+  'task_id': '0_R1'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4000)
+INFO:root:Done with job 0
+INFO:root:Listening for messages from ('127.0.0.1', 4002)
+INFO:root:Waiting for Jobs...
+INFO:root:Received from job pool: 1
+INFO:root:Starting job: 1
+INFO:root:Starting scheduler...
+DEBUG:root:Scheduled: ['1_M0', '1_M1']
+INFO:root:Sending tasks to workers...
+DEBUG:root:Mapped:
+[{'task': {'depends_on': [],
+           'duration': 1,
+           'job_id': '1',
+           'satisfies': ['1_R0', '1_R1'],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '1_M0'},
+  'worker_id': 3},
+ {'task': {'depends_on': [],
+           'duration': 1,
+           'job_id': '1',
+           'satisfies': ['1_R0', '1_R1'],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '1_M1'},
+  'worker_id': 2}]
+DEBUG:root:Sending to worker 3:
+{'depends_on': [],
+ 'duration': 1,
+ 'job_id': '1',
+ 'satisfies': ['1_R0', '1_R1'],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '1_M0'}
+DEBUG:root:Updating worker information...
+DEBUG:root:Sending to worker 2:
+{'depends_on': [],
+ 'duration': 1,
+ 'job_id': '1',
+ 'satisfies': ['1_R0', '1_R1'],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '1_M1'}
+DEBUG:root:Updating worker information...
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4002): {"worker_id": 3, "task": {"task_id": "1_M0", "duration": 0, "job_id": "1", "satisfies": ["1_R0", "1_R1"], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 1_M0...
+DEBUG:root:Removing depends_on for 1_R0
+DEBUG:root:Removing depends_on for 1_R1
+DEBUG:root:Received from worker ('127.0.0.1', 4001): {"worker_id": 2, "task": {"task_id": "1_M1", "duration": 0, "job_id": "1", "satisfies": ["1_R0", "1_R1"], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 1_M1...
+DEBUG:root:Removing depends_on for 1_R0
+DEBUG:root:Removing depends_on for 1_R1
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 1,
+  'job_id': '1',
+  'satisfies': ['1_R0', '1_R1'],
+  'status': <Status.SCHEDULED: 3>,
+  'task_id': '1_M1'},
+ {'depends_on': ['1_M1'],
+  'duration': 2,
+  'job_id': '1',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '1_R0'},
+ {'depends_on': ['1_M1'],
+  'duration': 1,
+  'job_id': '1',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '1_R1'}]
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 2,
+  'job_id': '1',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '1_R0'},
+ {'depends_on': [],
+  'duration': 1,
+  'job_id': '1',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '1_R1'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4002)
+DEBUG:root:Scheduled: ['1_R0', '1_R1']
+INFO:root:Sending tasks to workers...
+DEBUG:root:Mapped:
+[{'task': {'depends_on': [],
+           'duration': 2,
+           'job_id': '1',
+           'satisfies': [],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '1_R0'},
+  'worker_id': 2},
+ {'task': {'depends_on': [],
+           'duration': 1,
+           'job_id': '1',
+           'satisfies': [],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '1_R1'},
+  'worker_id': 3}]
+DEBUG:root:Sending to worker 2:
+{'depends_on': [],
+ 'duration': 2,
+ 'job_id': '1',
+ 'satisfies': [],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '1_R0'}
+DEBUG:root:Updating worker information...
+DEBUG:root:Sending to worker 3:
+{'depends_on': [],
+ 'duration': 1,
+ 'job_id': '1',
+ 'satisfies': [],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '1_R1'}
+DEBUG:root:Updating worker information...
+INFO:root:Waiting for more schedulable tasks...
+INFO:root:Listening for messages from ('127.0.0.1', 4001)
+DEBUG:root:Received from worker ('127.0.0.1', 4002): {"worker_id": 3, "task": {"task_id": "1_R1", "duration": 0, "job_id": "1", "satisfies": [], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 1_R1...
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 2,
+  'job_id': '1',
+  'satisfies': [],
+  'status': <Status.SCHEDULED: 3>,
+  'task_id': '1_R0'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4002)
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4001): {"worker_id": 2, "task": {"task_id": "1_R0", "duration": 0, "job_id": "1", "satisfies": [], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 1_R0...
+DEBUG:root:Updated task pool:
+[]
+INFO:root:Listening for messages from ('127.0.0.1', 4001)
+INFO:root:Done with job 1
+INFO:root:Waiting for Jobs...
+INFO:root:Received from job pool: 2
+INFO:root:Starting job: 2
+INFO:root:Starting scheduler...
+DEBUG:root:Scheduled: ['2_M0', '2_M1']
+INFO:root:Sending tasks to workers...
+DEBUG:root:Mapped:
+[{'task': {'depends_on': [],
+           'duration': 3,
+           'job_id': '2',
+           'satisfies': ['2_R0', '2_R1'],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '2_M0'},
+  'worker_id': 1},
+ {'task': {'depends_on': [],
+           'duration': 4,
+           'job_id': '2',
+           'satisfies': ['2_R0', '2_R1'],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '2_M1'},
+  'worker_id': 1}]
+DEBUG:root:Sending to worker 1:
+{'depends_on': [],
+ 'duration': 3,
+ 'job_id': '2',
+ 'satisfies': ['2_R0', '2_R1'],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '2_M0'}
+DEBUG:root:Updating worker information...
+DEBUG:root:Sending to worker 1:
+{'depends_on': [],
+ 'duration': 4,
+ 'job_id': '2',
+ 'satisfies': ['2_R0', '2_R1'],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '2_M1'}
+DEBUG:root:Updating worker information...
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4000): {"worker_id": 1, "task": {"task_id": "2_M0", "duration": 0, "job_id": "2", "satisfies": ["2_R0", "2_R1"], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 2_M0...
+DEBUG:root:Removing depends_on for 2_R0
+DEBUG:root:Removing depends_on for 2_R1
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 4,
+  'job_id': '2',
+  'satisfies': ['2_R0', '2_R1'],
+  'status': <Status.SCHEDULED: 3>,
+  'task_id': '2_M1'},
+ {'depends_on': ['2_M1'],
+  'duration': 2,
+  'job_id': '2',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '2_R0'},
+ {'depends_on': ['2_M1'],
+  'duration': 2,
+  'job_id': '2',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '2_R1'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4000)
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4000): {"worker_id": 1, "task": {"task_id": "2_M1", "duration": 0, "job_id": "2", "satisfies": ["2_R0", "2_R1"], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 2_M1...
+DEBUG:root:Removing depends_on for 2_R0
+DEBUG:root:Removing depends_on for 2_R1
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 2,
+  'job_id': '2',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '2_R0'},
+ {'depends_on': [],
+  'duration': 2,
+  'job_id': '2',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '2_R1'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4000)
+DEBUG:root:Scheduled: ['2_R0', '2_R1']
+INFO:root:Sending tasks to workers...
+DEBUG:root:Mapped:
+[{'task': {'depends_on': [],
+           'duration': 2,
+           'job_id': '2',
+           'satisfies': [],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '2_R0'},
+  'worker_id': 1},
+ {'task': {'depends_on': [],
+           'duration': 2,
+           'job_id': '2',
+           'satisfies': [],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '2_R1'},
+  'worker_id': 1}]
+DEBUG:root:Sending to worker 1:
+{'depends_on': [],
+ 'duration': 2,
+ 'job_id': '2',
+ 'satisfies': [],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '2_R0'}
+DEBUG:root:Updating worker information...
+DEBUG:root:Sending to worker 1:
+{'depends_on': [],
+ 'duration': 2,
+ 'job_id': '2',
+ 'satisfies': [],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '2_R1'}
+DEBUG:root:Updating worker information...
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4000): {"worker_id": 1, "task": {"task_id": "2_R0", "duration": 0, "job_id": "2", "satisfies": [], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 2_R0...
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 2,
+  'job_id': '2',
+  'satisfies': [],
+  'status': <Status.SCHEDULED: 3>,
+  'task_id': '2_R1'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4000)
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4000): {"worker_id": 1, "task": {"task_id": "2_R1", "duration": 0, "job_id": "2", "satisfies": [], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 2_R1...
+DEBUG:root:Updated task pool:
+[]
+INFO:root:Listening for messages from ('127.0.0.1', 4000)
+INFO:root:Done with job 2
+INFO:root:Waiting for Jobs...
+INFO:root:Received from job pool: 3
+INFO:root:Starting job: 3
+INFO:root:Starting scheduler...
+DEBUG:root:Scheduled: ['3_M0', '3_M1']
+INFO:root:Sending tasks to workers...
+DEBUG:root:Mapped:
+[{'task': {'depends_on': [],
+           'duration': 3,
+           'job_id': '3',
+           'satisfies': ['3_R0', '3_R1'],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '3_M0'},
+  'worker_id': 3},
+ {'task': {'depends_on': [],
+           'duration': 2,
+           'job_id': '3',
+           'satisfies': ['3_R0', '3_R1'],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '3_M1'},
+  'worker_id': 2}]
+DEBUG:root:Sending to worker 3:
+{'depends_on': [],
+ 'duration': 3,
+ 'job_id': '3',
+ 'satisfies': ['3_R0', '3_R1'],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '3_M0'}
+DEBUG:root:Updating worker information...
+DEBUG:root:Sending to worker 2:
+{'depends_on': [],
+ 'duration': 2,
+ 'job_id': '3',
+ 'satisfies': ['3_R0', '3_R1'],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '3_M1'}
+DEBUG:root:Updating worker information...
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4001): {"worker_id": 2, "task": {"task_id": "3_M1", "duration": 0, "job_id": "3", "satisfies": ["3_R0", "3_R1"], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 3_M1...
+DEBUG:root:Removing depends_on for 3_R0
+DEBUG:root:Removing depends_on for 3_R1
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 3,
+  'job_id': '3',
+  'satisfies': ['3_R0', '3_R1'],
+  'status': <Status.SCHEDULED: 3>,
+  'task_id': '3_M0'},
+ {'depends_on': ['3_M0'],
+  'duration': 4,
+  'job_id': '3',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '3_R0'},
+ {'depends_on': ['3_M0'],
+  'duration': 1,
+  'job_id': '3',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '3_R1'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4001)
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4002): {"worker_id": 3, "task": {"task_id": "3_M0", "duration": 0, "job_id": "3", "satisfies": ["3_R0", "3_R1"], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 3_M0...
+DEBUG:root:Removing depends_on for 3_R0
+DEBUG:root:Removing depends_on for 3_R1
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 4,
+  'job_id': '3',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '3_R0'},
+ {'depends_on': [],
+  'duration': 1,
+  'job_id': '3',
+  'satisfies': [],
+  'status': <Status.UNSCHEDULED: 2>,
+  'task_id': '3_R1'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4002)
+DEBUG:root:Scheduled: ['3_R0', '3_R1']
+INFO:root:Sending tasks to workers...
+DEBUG:root:Mapped:
+[{'task': {'depends_on': [],
+           'duration': 4,
+           'job_id': '3',
+           'satisfies': [],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '3_R0'},
+  'worker_id': 2},
+ {'task': {'depends_on': [],
+           'duration': 1,
+           'job_id': '3',
+           'satisfies': [],
+           'status': <Status.SCHEDULED: 3>,
+           'task_id': '3_R1'},
+  'worker_id': 2}]
+DEBUG:root:Sending to worker 2:
+{'depends_on': [],
+ 'duration': 4,
+ 'job_id': '3',
+ 'satisfies': [],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '3_R0'}
+DEBUG:root:Updating worker information...
+DEBUG:root:Sending to worker 2:
+{'depends_on': [],
+ 'duration': 1,
+ 'job_id': '3',
+ 'satisfies': [],
+ 'status': <Status.SCHEDULED: 3>,
+ 'task_id': '3_R1'}
+DEBUG:root:Updating worker information...
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4001): {"worker_id": 2, "task": {"task_id": "3_R1", "duration": 0, "job_id": "3", "satisfies": [], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 3_R1...
+DEBUG:root:Updated task pool:
+[{'depends_on': [],
+  'duration': 4,
+  'job_id': '3',
+  'satisfies': [],
+  'status': <Status.SCHEDULED: 3>,
+  'task_id': '3_R0'}]
+INFO:root:Listening for messages from ('127.0.0.1', 4001)
+INFO:root:Waiting for more schedulable tasks...
+DEBUG:root:Received from worker ('127.0.0.1', 4001): {"worker_id": 2, "task": {"task_id": "3_R0", "duration": 0, "job_id": "3", "satisfies": [], "depends_on": [], "status": 1}}
+DEBUG:root:Updating worker information...
+DEBUG:root:Updating dependencies for task 3_R0...
+DEBUG:root:Updated task pool:
+[]
+INFO:root:Listening for messages from ('127.0.0.1', 4001)
+INFO:root:Done with job 3
+INFO:root:Waiting for Jobs...
+ERROR:root:Connection from worker ('127.0.0.1', 4000) broken
+ERROR:root:Connection from worker ('127.0.0.1', 4002) broken
+ERROR:root:Connection from worker ('127.0.0.1', 4001) broken
+DEBUG:root:Closed connections sockets
+DEBUG:root:Closed all threads
+INFO:root:Exiting...
