@@ -6,6 +6,7 @@ This program runs on the master.
 from threading import Thread, Event, Lock
 from queue import SimpleQueue
 import logging
+import pprint
 import sys
 import random
 from signal import signal, SIGINT
@@ -15,20 +16,27 @@ import json
 from utils import TaskPool, Status
 
 
+class PrettyLog():
+    def __init__(self, obj):
+        self.obj = obj
+    def __repr__(self):
+        return pprint.pformat(self.obj)
+
+
 class Scheduler:
     @staticmethod
     def random_scheduler(tasks, workers):
-        task_mapping = []
+        task_map_list = []
         for task in tasks:
             while True:
                 worker = random.choice(workers)
                 if worker['free_slot_count'] > 0:
-                    task_mapping.append({
+                    task_map_list.append({
                         'worker_id': worker['worker_id'],
                         'task': task
                     })
                     break
-        return task_mapping
+        return task_map_list
                     
     @staticmethod
     def round_robin_scheduler(tasks, workers):
@@ -60,6 +68,7 @@ class Master:
         # Events and locks
         self.schedule_event = Event()
         self.scheduler_lock = Lock()
+        self.worker_lock = Lock()
 
     # For context manager, establishes the connections and launches them in a new thread
     def __enter__(self):
@@ -119,15 +128,15 @@ class Master:
             with conn:
                 logging.info("Request source connected! Awaiting data...")
                 req = conn.recv(4096).decode()
-                logging.debug(f"got request: {req}")
+                logging.debug(f"request_listener:Got request:\n{PrettyLog(req)}")
                 job = json.loads(req)
                 self.job_pool.put(job)
                 # logging.debug(f"Job Pool: {[job['job_id'] for job in list(job_pool.queue)]}")
 
     def worker_listener(self, conn_info):
         conn, addr = conn_info
-        while not self.exit_command_received.is_set():
-            with conn:
+        with conn:
+            while not self.exit_command_received.is_set():
                 logging.info(f"Listening for messages from {addr}")
                 worker_message = conn.recv(4096).decode()
                 if not worker_message:
@@ -135,13 +144,48 @@ class Master:
                     break
                 logging.debug(f"Received from worker {addr}: {worker_message}")
                 task_map = json.loads(worker_message)
-                self.update_worker_params(task_map)
+                # increases the number of free slots for each worker in task map
+                self.update_worker_params(task_map, mode='increment')
+                # updates the dependencies of the task in the task pool, and
+                # removes tasks from the task pool that are not needed anymore
+                self.update_dependencies(task_map)
                 # notify the scheduler that there are free slots
                 self.schedule_event.set()
 
-    def update_worker_params(self, task_map):
-        pass
-    
+    def update_worker_params(self, task_map, mode):
+        logging.debug("Updating worker information...")
+        # O(n^2) and I don't care
+        # Apologies to those reading this code snippet
+        print(task_map)
+        with self.worker_lock:
+            for worker in self.workers:
+                if worker['worker_id'] == task_map['worker_id']:
+                    if mode == "increment":
+                        worker['free_slot_count'] += 1
+                    elif mode == "decrement":
+                        worker['free_slot_count'] -= 1
+        logging.debug(f"update_worker_params:Workers:\n{PrettyLog(self.workers)}")
+                        
+    # This part is a huge hack, proceed with caution
+    def update_dependencies(self, task_map):
+        task = task_map['task']
+        logging.debug(f"Updating dependencies for task {task['task_id']}...")
+        def update_func(t, id_to_remove):
+            try:
+                t['depends_on'].remove(id_to_remove)
+            except ValueError:
+                pass
+        for task_id in task['satisfies']:
+            logging.debug(f"Removing depends_on for {task_id}")
+            self.task_pool.update(
+                lambda t: t['task_id'] == task_id,
+                lambda t: update_func(t, task['task_id'])
+            )
+        if task['status'] == 1:
+            print(f"Deleting {PrettyLog(task)}")
+            self.task_pool.remove(lambda t: t['task_id'] == task['task_id'])
+        logging.debug(f"Updated task pool:\n{PrettyLog(self.task_pool.tasks)}")
+            
     def run(self):
         while True:
             # read from job pool
@@ -204,18 +248,18 @@ class Master:
             status = self.send_task(task_map)
         logging.info(f"Done with job {job['job_id']}")
 
-    def send_task(self, task_mapping):
+    def send_task(self, task_map_list):
         logging.info("Sending tasks to workers...")
-        logging.debug(f"Mapped: {task_mapping}")
-        for mapping in task_mapping:
-            w_id = mapping['worker_id']
+        logging.debug(f"Mapped:\n{PrettyLog(task_map_list)}")
+        for task_map in task_map_list:
+            w_id = task_map['worker_id']
             conn, addr = self.connections[w_id]
             with conn:
-                logging.debug(f"Sending to worker {w_id}: {mapping['task']}")
-                message = json.dumps(mapping['task']).encode()
+                logging.debug(f"Sending to worker {w_id}:\n{PrettyLog(task_map['task'])}")
+                message = json.dumps(task_map['task']).encode()
                 conn.sendall(message)
-                self.update_worker_params(mapping)
-        # TODO: remove from task pool
+                # reduce the number of free slots for the assigned workers
+                self.update_worker_params(task_map, mode='decrement')
         return Status.SUCCESS
 
 if __name__ == '__main__':

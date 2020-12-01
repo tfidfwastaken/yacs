@@ -14,6 +14,13 @@ class TaskPool():
         self.tasks = tasks
         self.lock = Lock()
 
+    def get(self, func):
+        """Returns first task that matches condition in func"""
+        with self.lock:
+            for task in self.tasks:
+                if func(task):
+                    return task
+        
     # TODO: this is not a clean way to do it, breaks separation
     # of concerns. Works for now though.
     def take(self, n):
@@ -34,10 +41,22 @@ class TaskPool():
             filtered = [task for task in self.tasks if func(task)]
             return TaskPool(filtered)
 
-    def remove(self, tasks_to_remove):
+    def remove(self, func):
         with self.lock:
-            self.tasks = [item for item in self.tasks if item not in tasks_to_remove]
+            self.tasks = [item for item in self.tasks if not func(item)]
 
+    def update(self, cond_func, transform):
+        """Updates items in the task pool
+        
+        For all items in the task pool satisfying `cond_func`,
+        update using the transforming function `transform`
+        """
+        with self.lock:
+            for task in self.tasks:
+                if cond_func(task):
+                    # this mutation needs fixing, inconsistent with the API
+                    transform(task)
+    
     def is_empty(self):
         with self.lock:
             if self.tasks == []:

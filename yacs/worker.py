@@ -53,6 +53,7 @@ class Worker:
             self.exec_pool.put(task)
 
     def send_task(self, task):
+        task['status'] = Status.SUCCESS
         task_map = {'worker_id': self.id, 'task': task}
         message = json.dumps(task_map).encode()
         self.master_sock.sendall(message)
