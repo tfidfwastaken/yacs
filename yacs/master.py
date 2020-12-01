@@ -18,17 +18,16 @@ from utils import TaskPool, Status
 class Scheduler:
     @staticmethod
     def random_scheduler(tasks, workers):
-        found_a_slot = False
         task_mapping = []
         for task in tasks:
-            while not found_a_slot:
+            while True:
                 worker = random.choice(workers)
                 if worker['free_slot_count'] > 0:
                     task_mapping.append({
                         'worker_id': worker['worker_id'],
                         'task': task
                     })
-                found_a_slot = True
+                    break
         return task_mapping
                     
     @staticmethod
@@ -194,6 +193,7 @@ class Master:
             # a finished task
             if tasks_to_schedule.is_empty():
                 self.schedule_event.clear()
+                logging.info("Waiting for more schedulable tasks...")
                 self.schedule_event.wait()
                 tasks_to_schedule = self.task_pool \
                                         .filter(schedulable) \
@@ -206,6 +206,7 @@ class Master:
 
     def send_task(self, task_mapping):
         logging.info("Sending tasks to workers...")
+        logging.debug(f"Mapped: {task_mapping}")
         for mapping in task_mapping:
             w_id = mapping['worker_id']
             conn, addr = self.connections[w_id]
