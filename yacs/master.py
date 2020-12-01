@@ -222,7 +222,7 @@ class Master:
         logging.debug("Updating worker information...")
         # O(n^2) and I don't care
         # Apologies to those reading this code snippet
-        print(task_map)
+        # print(task_map)
         with self.worker_lock:
             for worker in self.workers:
                 if worker['worker_id'] == task_map['worker_id']:
@@ -230,7 +230,7 @@ class Master:
                         worker['free_slot_count'] += 1
                     elif mode == "decrement":
                         worker['free_slot_count'] -= 1
-        logging.debug(f"update_worker_params:Workers:\n{PrettyLog(self.workers)}")
+        # logging.debug(f"update_worker_params:Workers:\n{PrettyLog(self.workers)}")
                         
     # This part is a huge hack, proceed with caution
     def update_dependencies(self, task_map):
@@ -248,7 +248,7 @@ class Master:
                 lambda t: update_func(t, task['task_id'])
             )
         if task['status'] == 1:
-            print(f"Deleting {PrettyLog(task)}")
+            # print(f"Deleting {PrettyLog(task)}")
             self.task_pool.remove(lambda t: t['task_id'] == task['task_id'])
         logging.debug(f"Updated task pool:\n{PrettyLog(self.task_pool.tasks)}")
 
@@ -305,9 +305,7 @@ class Master:
                 self.schedule_event.clear()
                 logging.info("Waiting for more schedulable tasks...")
                 self.schedule_event.wait()
-                tasks_to_schedule = self.task_pool \
-                                        .filter(schedulable) \
-                                        .take(total_free_slots)
+                continue
             logging.debug(f"Scheduled: {[task['task_id'] for task in tasks_to_schedule.tasks]}")
             with self.scheduler_lock:
                 task_map = self.scheduler(tasks_to_schedule.tasks, self.workers)
@@ -320,12 +318,11 @@ class Master:
         for task_map in task_map_list:
             w_id = task_map['worker_id']
             conn, addr = self.connections[w_id]
-            with conn:
-                logging.debug(f"Sending to worker {w_id}:\n{PrettyLog(task_map['task'])}")
-                message = json.dumps(task_map['task']).encode()
-                conn.sendall(message)
-                # reduce the number of free slots for the assigned workers
-                self.update_worker_params(task_map, mode='decrement')
+            logging.debug(f"Sending to worker {w_id}:\n{PrettyLog(task_map['task'])}")
+            message = json.dumps(task_map['task']).encode()
+            conn.sendall(message)
+            # reduce the number of free slots for the assigned workers
+            self.update_worker_params(task_map, mode='decrement')
         return Status.SUCCESS
 
 if __name__ == '__main__':
