@@ -38,13 +38,79 @@ class Scheduler:
                     break
         return task_map_list
                     
-    @staticmethod
-    def round_robin_scheduler(tasks, workers):
-        pass
+    def find_llw(w):
+        max_wid = 0
+        max_count = 0
+        for wk in w :
+            if w[wk] > max_count :
+                max_wid = wk
+                max_count = w[wk]
+        return max_wid
 
     @staticmethod
     def least_loaded_scheduler(tasks, workers):
-        pass
+        w = dict()
+        task_mapping = []
+        for wk in workers:
+            wid = wk['worker_id']
+            w[wid] = wk['free_slot_count']
+
+        for task in tasks:
+            max_wid = self.find_llw(w)
+            task_mapping.append({
+                'worker_id': max_wid,
+                'task': task
+            })
+            for worker in w:
+                if worker == max_wid:
+                    w[worker] -= 1
+            print("TASK MAPPING", task_mapping)
+            print("MODIFIED :\n",w)
+        return task_mapping
+
+
+    @staticmethod
+    def least_loaded_scheduler(tasks, workers):
+        wks = workers
+        task_mapping = []
+        # need to find number of free slots
+        # find the least number
+        min_wid = 0
+        min_count = 0
+        for task in tasks:
+            for w in wks :
+                if w['free_slot_count'] < min_count :
+                    min_wid = w['worker_id']
+                    min_count = w['free_slot_count']
+                    w['free_slot_count'] -= 1
+            task_mapping.append({
+                'worker_id': w['worker_id'],
+                'task': task
+            })
+        return task_mapping
+
+    @staticmethod
+    def round_robin_scheduler(tasks, workers):
+        w = dict()
+        task_mapping = []
+        for wk in workers:
+            wid = wk['worker_id']
+            w[wid] = wk['free_slot_count']
+
+        c = 0
+        for task in tasks:
+            flag = 1
+            while flag:
+                if w[c+1] > 0:
+                    task_mapping.append({
+                    'worker_id': c+1 ,
+                    'task': task
+                    })
+                    w[c+1] -= 1
+                    flag = 0
+                c = (c+1)%3
+
+        return task_mapping
 
 
 class Master:
@@ -185,10 +251,10 @@ class Master:
             print(f"Deleting {PrettyLog(task)}")
             self.task_pool.remove(lambda t: t['task_id'] == task['task_id'])
         logging.debug(f"Updated task pool:\n{PrettyLog(self.task_pool.tasks)}")
-            
+
     def run(self):
         while True:
-            # read from job pool
+            # Read from job pool
             logging.info("Waiting for Jobs...")
             job = self.job_pool.get()
             logging.info(f"Received from job pool: {job['job_id']}")
