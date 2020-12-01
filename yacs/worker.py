@@ -2,6 +2,7 @@
 
 from threading import Thread, Event
 from queue import SimpleQueue, Empty
+from utils import Status
 import logging
 import sys
 import socket
@@ -11,8 +12,9 @@ from utils import Status
 
 
 class Worker:
-    def __init__(self, conn_info, slot_count):
+    def __init__(self, conn_info, worker_id, slot_count):
         self.master_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.id = worker_id
         self.conn_info = conn_info
         self.exec_pool = SimpleQueue()
         self.slot_count = slot_count
@@ -40,6 +42,7 @@ class Worker:
         master.connect(('localhost', 5001))
         logging.info("Connection to master successful")
         while not self.exit_command_received.is_set():
+            logging.info("Listening for tasks")
             task_message = master.recv(4096).decode()
             if not task_message:
                 logging.error("Connection to master broken")
@@ -50,7 +53,10 @@ class Worker:
             self.exec_pool.put(task)
 
     def send_task(self, task):
-        pass
+        task_map = {'worker_id': self.id, 'task': task}
+        message = json.dumps(task_map).encode()
+        self.master_sock.sendall(message)
+        return Status.SUCCESS
     
     def run(self):
         while not self.exit_command_received.is_set():
@@ -71,17 +77,18 @@ class Worker:
                 status = self.send_task(task)
 
 if __name__ == '__main__':
-    logging.basicConfig(filename='yacs_worker.log', filemode='w', level=logging.DEBUG)
     port = int(sys.argv[1])
     worker_id = int(sys.argv[2])
     with open('config.json') as cfg:
         workers = json.load(cfg)['workers']
 
+    logging.basicConfig(filename=f'yacs_worker_{worker_id}.log', \
+                        filemode='w', level=logging.DEBUG)
     # make this more robust
     this_worker = None
     for worker in workers:
         if worker['worker_id'] == worker_id:
             this_worker = worker
 
-    with Worker(('localhost', port), this_worker['slots']) as worker:
+    with Worker(('localhost', port), worker_id, this_worker['slots']) as worker:
         worker.run()
