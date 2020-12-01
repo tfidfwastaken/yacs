@@ -4,6 +4,7 @@ from threading import Thread, Event
 from queue import SimpleQueue, Empty
 from utils import Status
 import logging
+import time
 import sys
 import socket
 import json
@@ -72,6 +73,7 @@ class Worker:
                     break
                 else:
                     continue
+            time.sleep(1)
             task['duration'] -= 1
             if task['duration'] != 0:
                 self.exec_pool.put(task)

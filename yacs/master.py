@@ -11,7 +11,9 @@ import sys
 import random
 from signal import signal, SIGINT
 import socket
+import copy
 import json
+import time
 import struct
 
 from utils import TaskPool, Status
@@ -25,6 +27,7 @@ class PrettyLog():
 
 
 class Scheduler:
+    round_robin_start = 0
     @staticmethod
     def random_scheduler(tasks, workers):
         task_map_list = []
@@ -39,53 +42,21 @@ class Scheduler:
                     break
         return task_map_list
                     
-    def find_llw(w):
-        max_wid = 0
-        max_count = 0
-        for wk in w :
-            if w[wk] > max_count :
-                max_wid = wk
-                max_count = w[wk]
-        return max_wid
-
     @staticmethod
     def least_loaded_scheduler(tasks, workers):
-        w = dict()
         task_mapping = []
-        for wk in workers:
-            wid = wk['worker_id']
-            w[wid] = wk['free_slot_count']
+        w = copy.deepcopy(workers)
 
         for task in tasks:
-            max_wid = self.find_llw(w)
+            max_worker = max(w, key=lambda t:t['free_slot_count'])
+            while max_worker['free_slot_count'] == 0:
+                time.sleep(1)
+                max_worker = max(w, key=lambda t:t['free_slot_count'])
+            # print(max_worker)
+            max_wid = max_worker['worker_id']
+            max_worker['free_slot_count'] -= 1
             task_mapping.append({
                 'worker_id': max_wid,
-                'task': task
-            })
-            for worker in w:
-                if worker == max_wid:
-                    w[worker] -= 1
-            print("TASK MAPPING", task_mapping)
-            print("MODIFIED :\n",w)
-        return task_mapping
-
-
-    @staticmethod
-    def least_loaded_scheduler(tasks, workers):
-        wks = workers
-        task_mapping = []
-        # need to find number of free slots
-        # find the least number
-        min_wid = 0
-        min_count = 0
-        for task in tasks:
-            for w in wks :
-                if w['free_slot_count'] < min_count :
-                    min_wid = w['worker_id']
-                    min_count = w['free_slot_count']
-                    w['free_slot_count'] -= 1
-            task_mapping.append({
-                'worker_id': w['worker_id'],
                 'task': task
             })
         return task_mapping
@@ -95,22 +66,23 @@ class Scheduler:
         w = dict()
         task_mapping = []
         for wk in workers:
-            wid = wk['worker_id']
-            w[wid] = wk['free_slot_count']
+            wid = copy.deepcopy(wk['worker_id'])
+            w[wid] = copy.deepcopy(wk['free_slot_count'])
 
-        c = 0
+        c = Scheduler.round_robin_start
         for task in tasks:
             flag = 1
             while flag:
                 if w[c+1] > 0:
                     task_mapping.append({
-                    'worker_id': c+1 ,
-                    'task': task
+                        'worker_id': c+1 ,
+                        'task': task
                     })
                     w[c+1] -= 1
                     flag = 0
-                c = (c+1)%3
+                c = (c+1) % len(workers)
 
+        Scheduler.round_robin_start = c % len(workers)
         return task_mapping
 
 
@@ -236,7 +208,7 @@ class Master:
                         worker['free_slot_count'] += 1
                     elif mode == "decrement":
                         worker['free_slot_count'] -= 1
-        # logging.debug(f"update_worker_params:Workers:\n{PrettyLog(self.workers)}")
+        logging.debug(f"update_worker_params:Workers:\n{PrettyLog(self.workers)}")
                         
     # This part is a huge hack, proceed with caution
     def update_dependencies(self, task_map):
@@ -315,7 +287,9 @@ class Master:
             logging.debug(f"Scheduled: {[task['task_id'] for task in tasks_to_schedule.tasks]}")
             with self.scheduler_lock:
                 task_map = self.scheduler(tasks_to_schedule.tasks, self.workers)
+            # logging.debug(f"post-schedule:Workers:\n{PrettyLog(self.workers)}")
             status = self.send_task(task_map)
+        print(f"Done with job {job['job_id']}")
         logging.info(f"Done with job {job['job_id']}")
 
     def send_task(self, task_map_list):
@@ -335,5 +309,5 @@ if __name__ == '__main__':
     # Context management protocol, all threads and connections
     # are automatically closed after it's done
     logging.basicConfig(filename='yacs_master.log', filemode='w', level=logging.DEBUG)
-    with Master('config.json', Scheduler.random_scheduler) as master:
+    with Master('config.json', Scheduler.round_robin_scheduler) as master:
         master.run()
