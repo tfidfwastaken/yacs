@@ -7,6 +7,7 @@ import logging
 import sys
 import socket
 import json
+import struct
 
 from utils import Status
 
@@ -56,6 +57,7 @@ class Worker:
         task['status'] = Status.SUCCESS
         task_map = {'worker_id': self.id, 'task': task}
         message = json.dumps(task_map).encode()
+        message = struct.pack('!I', len(message)) + message
         self.master_sock.sendall(message)
         return Status.SUCCESS
     

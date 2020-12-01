@@ -12,6 +12,7 @@ import random
 from signal import signal, SIGINT
 import socket
 import json
+import struct
 
 from utils import TaskPool, Status
 
@@ -204,7 +205,12 @@ class Master:
         with conn:
             while not self.exit_command_received.is_set():
                 logging.info(f"Listening for messages from {addr}")
-                worker_message = conn.recv(4096).decode()
+                raw_msglen = conn.recv(4)
+                if not raw_msglen:
+                    logging.error(f"Connection from worker {addr} broken")
+                    break
+                msglen = struct.unpack('!I', raw_msglen)[0]
+                worker_message = conn.recv(msglen).decode()
                 if not worker_message:
                     logging.error(f"Connection from worker {addr} broken")
                     break
