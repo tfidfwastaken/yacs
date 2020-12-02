@@ -334,5 +334,13 @@ if __name__ == '__main__':
     # Context management protocol, all threads and connections
     # are automatically closed after it's done
     logging.basicConfig(filename='yacs_master.log', filemode='w', level=logging.DEBUG)
-    with Master('config.json', Scheduler.round_robin_scheduler) as master:
+
+    # Accepting Scheduling Algorithm
+    schedulers = {"RR": Scheduler.round_robin_scheduler, "LL":Scheduler.least_loaded_scheduler, "R":Scheduler.random_scheduler}
+    while True :
+        x = input("Pick a Scheduler :\n1. Round Robin Scheduler (RR)\n2. Random Scheduler (R)\n3. Least Loaded Scheduler (LL)\nEnter choice : ")
+        if x in schedulers.keys():
+            break
+    sched_chosen = schedulers[x]
+    with Master('config.json', sched_chosen) as master:
         master.run()
