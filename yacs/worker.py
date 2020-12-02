@@ -8,6 +8,7 @@ import time
 import sys
 import socket
 import json
+import csv
 import struct
 
 from utils import Status
@@ -21,6 +22,7 @@ class Worker:
         self.exec_pool = SimpleQueue()
         self.slot_count = slot_count
         self.exit_command_received = Event()
+        self.task_log = {}
 
     def __enter__(self):
         logging.info("Starting Worker...")
@@ -51,7 +53,10 @@ class Worker:
                 self.exit_command_received.set()
                 break
             task = json.loads(task_message)
-            logging.debug(f"Received task: {task['task_id']} of job {task['job_id']}")
+            logging.info(f"Received task: {task['task_id']} of job {task['job_id'] at {time.time()}")
+            self.task_log[task['task_id']]={}
+            self.task_log[task['task_id']]['job_id'] = task['job_id']
+            self.task_log[task['task_id']]['start'] = time.time()
             self.exec_pool.put(task)
 
     def send_task(self, task):
@@ -61,11 +66,20 @@ class Worker:
         message = struct.pack('!I', len(message)) + message
         self.master_sock.sendall(message)
         return Status.SUCCESS
-    
+ 
+    # To record the start and finish time of task in csv
+    def record_log(self, tid):
+        with open(r'worker_'+str(self.id)+'.csv', 'a') as f:
+            writer = csv.writer(f)
+            jid = self.task_log[tid]['job_id']
+            start = self.task_log[tid]['start']
+            stop = self.task_log[tid]['end']
+            writer.writerow([jid,tid,start,stop])
+   
     def run(self):
+        logging.info("Waiting for tasks")
         while not self.exit_command_received.is_set():
             # get them tasks
-            logging.info("Waiting for tasks")
             try:
                 task = self.exec_pool.get(timeout=10)
             except Empty:
@@ -78,7 +92,10 @@ class Worker:
             if task['duration'] != 0:
                 self.exec_pool.put(task)
             else:
-                logging.info(f"Task {task['task_id']} completed! Sending to Master...")
+                logging.info(f"Finished task: {task['task_id']} of job {task['job_id']} at {time.time()}")
+                self.task_log[task['task_id']]['end'] = time.time()
+                self.record_log(task['task_id'])
+                logging.info(f"Reporting back to Master...")
                 status = self.send_task(task)
 
 if __name__ == '__main__':
@@ -89,7 +106,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(filename=f'yacs_worker_{worker_id}.log', \
                         filemode='w', level=logging.DEBUG)
-    # make this more robust
+    # make this more robust later
     this_worker = None
     for worker in workers:
         if worker['worker_id'] == worker_id:

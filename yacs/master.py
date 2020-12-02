@@ -13,6 +13,7 @@ from signal import signal, SIGINT
 import socket
 import copy
 import json
+import csv
 import time
 import struct
 
@@ -41,7 +42,7 @@ class Scheduler:
                     })
                     break
         return task_map_list
-                    
+
     @staticmethod
     def least_loaded_scheduler(tasks, workers):
         task_mapping = []
@@ -108,6 +109,9 @@ class Master:
         self.schedule_event = Event()
         self.scheduler_lock = Lock()
         self.worker_lock = Lock()
+
+        # Job logs
+        self.job_log ={}
 
     # For context manager, establishes the connections and launches them in a new thread
     def __enter__(self):
@@ -209,7 +213,7 @@ class Master:
                     elif mode == "decrement":
                         worker['free_slot_count'] -= 1
         logging.debug(f"update_worker_params:Workers:\n{PrettyLog(self.workers)}")
-                        
+
     # This part is a huge hack, proceed with caution
     def update_dependencies(self, task_map):
         task = task_map['task']
@@ -259,6 +263,9 @@ class Master:
 
     def start_job(self, job):
         logging.info(f"Starting job: {job['job_id']}")
+        self.job_log[job['job_id']]={}
+        self.job_log[job['job_id']]['start'] = time.time()
+
         tasks = self.parse_job_request(job)
         self.task_pool = TaskPool(tasks)
         # print(self.task_pool.is_empty())
@@ -291,6 +298,16 @@ class Master:
             status = self.send_task(task_map)
         print(f"Done with job {job['job_id']}")
         logging.info(f"Done with job {job['job_id']}")
+        self.job_log[job['job_id']]['stop'] = time.time()
+        self.record_log(job['job_id'])
+
+    # To record the start and finish time for job in the csv
+    def record_log(self, jid):
+        with open(r'job_log.csv', 'a') as f:
+            writer = csv.writer(f)
+            start = self.job_log[jid]['start']
+            stop = self.job_log[jid]['stop']
+            writer.writerow([jid,start,stop])
 
     def send_task(self, task_map_list):
         logging.info("Sending tasks to workers...")
