@@ -103,7 +103,9 @@ class Master:
 
         # Connections
         self.request_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.request_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
         self.worker_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.worker_sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
 
         # Events and locks
         self.schedule_event = Event()
@@ -142,13 +144,16 @@ class Master:
 
     # cleanup of resources
     def __exit__(self, exc_type, exc_value, traceback):
-        self.request_sock.shutdown(socket.SHUT_RD)
-        self.request_sock.close()
-        self.worker_sock.shutdown(socket.SHUT_RD)
-        self.worker_sock.close()
+        if self.request_sock.fileno() != -1:
+            self.request_sock.shutdown(socket.SHUT_RD)
+            self.request_sock.close()
+        if self.worker_sock.fileno() != -1:
+            self.worker_sock.shutdown(socket.SHUT_RD)
+            self.worker_sock.close()
         for conn, _ in self.connections.values():
-            conn.shutdown(socket.SHUT_RD)
-            conn.close()
+            if conn.fileno() != -1:
+                conn.shutdown(socket.SHUT_RD)
+                conn.close()
         logging.debug("Closed connections sockets")
         for thread in self.worker_threads:
             thread.join()
@@ -167,7 +172,10 @@ class Master:
         sock.listen()
         while not self.exit_command_received.is_set():
             logging.info("Awaiting request connections...")
-            conn, addr = sock.accept()
+            try:
+                conn, addr = sock.accept()
+            except OSError:
+                break
             with conn:
                 logging.info("Request source connected! Awaiting data...")
                 req = conn.recv(4096).decode()

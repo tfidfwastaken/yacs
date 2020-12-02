@@ -53,7 +53,7 @@ class Worker:
                 self.exit_command_received.set()
                 break
             task = json.loads(task_message)
-            logging.info(f"Received task: {task['task_id']} of job {task['job_id'] at {time.time()}")
+            logging.info(f"Received task: {task['task_id']} of job {task['job_id']} at {time.time()}")
             self.task_log[task['task_id']]={}
             self.task_log[task['task_id']]['job_id'] = task['job_id']
             self.task_log[task['task_id']]['start'] = time.time()
@@ -84,6 +84,7 @@ class Worker:
                 task = self.exec_pool.get(timeout=10)
             except Empty:
                 if self.exit_command_received.is_set():
+                    print("Exiting...")
                     break
                 else:
                     continue
