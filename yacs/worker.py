@@ -1,16 +1,18 @@
 """Worker"""
 
-from threading import Thread, Event
 from queue import SimpleQueue, Empty
+from threading import Thread, Event
 from utils import Status
-import logging
-import time
-import sys
-import socket
-import json
 import csv
+import json
+import logging
+import pathlib
+import socket
 import struct
+import sys
+import time
 
+# Status enum provided by utils.py
 from utils import Status
 
 
@@ -42,8 +44,10 @@ class Worker:
         self.task_listener_thread.join()
         logging.debug("Closed threads")
 
+    # connects to master and listens for tasks
     def task_listener(self, master):
         master.connect(('localhost', 5001))
+        print("Connected to master.")
         logging.info("Connection to master successful")
         while not self.exit_command_received.is_set():
             logging.info("Listening for tasks")
@@ -59,6 +63,7 @@ class Worker:
             self.task_log[task['task_id']]['start'] = time.time()
             self.exec_pool.put(task)
 
+    # Informs the master on task success
     def send_task(self, task):
         task['status'] = Status.SUCCESS
         task_map = {'worker_id': self.id, 'task': task}
@@ -76,6 +81,7 @@ class Worker:
             stop = self.task_log[tid]['end']
             writer.writerow([jid,tid,start,stop])
    
+    # starts the worker
     def run(self):
         logging.info("Waiting for tasks")
         while not self.exit_command_received.is_set():
@@ -102,7 +108,8 @@ class Worker:
 if __name__ == '__main__':
     port = int(sys.argv[1])
     worker_id = int(sys.argv[2])
-    with open('config.json') as cfg:
+    config_location = pathlib.Path(__file__).absolute().parent.parent / 'config.json'
+    with open(config_location) as cfg:
         workers = json.load(cfg)['workers']
 
     logging.basicConfig(filename=f'yacs_worker_{worker_id}.log', \

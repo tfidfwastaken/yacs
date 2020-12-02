@@ -3,30 +3,34 @@
 This program runs on the master.
 """
 
-from threading import Thread, Event, Lock
 from queue import SimpleQueue
-import logging
-import pprint
-import sys
-import random
 from signal import signal, SIGINT
-import socket
+from threading import Thread, Event, Lock
 import copy
-import json
 import csv
-import time
+import json
+import logging
+import pathlib
+import pprint
+import random
+import socket
 import struct
+import sys
+import time
 
+# TaskPool, the main shared data structure provided
+# by utils.py in this directory
 from utils import TaskPool, Status
 
 
+# Just a helper class to make debug logs more readable
 class PrettyLog():
     def __init__(self, obj):
         self.obj = obj
     def __repr__(self):
         return pprint.pformat(self.obj)
 
-
+# Schedulers provided by this class, they are just normal functions
 class Scheduler:
     round_robin_start = 0
     @staticmethod
@@ -64,7 +68,7 @@ class Scheduler:
 
     @staticmethod
     def round_robin_scheduler(tasks, workers):
-        w = dict()
+        w = {}
         task_mapping = []
         for wk in workers:
             wid = copy.deepcopy(wk['worker_id'])
@@ -91,7 +95,6 @@ class Master:
     def __init__(self, config_path, scheduler):
         with open(config_path, 'r') as cfg_file:
             config = json.load(cfg_file)
-        # for now I will not use a separate worker class, as this is simpler
         self.workers = config['workers']
         for w in self.workers:
             w['free_slot_count'] = w['slots']
@@ -119,8 +122,8 @@ class Master:
     def __enter__(self):
         signal(SIGINT, self._sigint_handler)
         self.exit_command_received = Event()
-        self.request_sock.bind(('localhost', 5000)) # fix later, hardcoded rn
-        self.worker_sock.bind(('localhost', 5001)) # fix later, hardcoded rn
+        self.request_sock.bind(('localhost', 5000))
+        self.worker_sock.bind(('localhost', 5001))
 
         logging.info("Starting request thread...")
         self.request_thread = Thread(name='Request Thread', \
@@ -144,22 +147,23 @@ class Master:
 
     # cleanup of resources
     def __exit__(self, exc_type, exc_value, traceback):
+        for conn, _ in self.connections.values():
+            if conn.fileno() != -1:
+                conn.shutdown(socket.SHUT_RD)
+                conn.close()
         if self.request_sock.fileno() != -1:
             self.request_sock.shutdown(socket.SHUT_RD)
             self.request_sock.close()
         if self.worker_sock.fileno() != -1:
             self.worker_sock.shutdown(socket.SHUT_RD)
             self.worker_sock.close()
-        for conn, _ in self.connections.values():
-            if conn.fileno() != -1:
-                conn.shutdown(socket.SHUT_RD)
-                conn.close()
         logging.debug("Closed connections sockets")
         for thread in self.worker_threads:
             thread.join()
         self.request_thread.join()
         logging.debug("Closed all threads")
 
+    # Handles keyboard interrupts
     def _sigint_handler(self, signal_received, frame):
         print("Received exit command...")
         self.exit_command_received.set()
@@ -168,6 +172,7 @@ class Master:
         print("Exiting...")
         sys.exit(0)
 
+    # listens for requests, runs in a separate thread
     def request_listener(self, sock):
         sock.listen()
         while not self.exit_command_received.is_set():
@@ -184,6 +189,8 @@ class Master:
                 self.job_pool.put(job)
                 # logging.debug(f"Job Pool: {[job['job_id'] for job in list(job_pool.queue)]}")
 
+    # Listens for messages from the workers, runs a separate instance
+    # for each worker thread
     def worker_listener(self, conn_info):
         conn, addr = conn_info
         with conn:
@@ -210,7 +217,7 @@ class Master:
 
     def update_worker_params(self, task_map, mode):
         logging.debug("Updating worker information...")
-        # O(n^2) and I don't care
+        # O(n^2) and I don't care (for the lack of time)
         # Apologies to those reading this code snippet
         # print(task_map)
         with self.worker_lock:
@@ -222,7 +229,8 @@ class Master:
                         worker['free_slot_count'] -= 1
         logging.debug(f"update_worker_params:Workers:\n{PrettyLog(self.workers)}")
 
-    # This part is a huge hack, proceed with caution
+    # This part is a bit of a hack, proceed with caution
+    # Updates dependencies once tasks are received from the workers
     def update_dependencies(self, task_map):
         task = task_map['task']
         logging.debug(f"Updating dependencies for task {task['task_id']}...")
@@ -242,6 +250,7 @@ class Master:
             self.task_pool.remove(lambda t: t['task_id'] == task['task_id'])
         logging.debug(f"Updated task pool:\n{PrettyLog(self.task_pool.tasks)}")
 
+    # Starts the master, reads from the job pool
     def run(self):
         while True:
             # Read from job pool
@@ -269,6 +278,7 @@ class Master:
         return tasks
 
 
+    # starts a job
     def start_job(self, job):
         logging.info(f"Starting job: {job['job_id']}")
         self.job_log[job['job_id']]={}
@@ -317,6 +327,7 @@ class Master:
             stop = self.job_log[jid]['stop']
             writer.writerow([jid,start,stop])
 
+    # Sends task to worker
     def send_task(self, task_map_list):
         logging.info("Sending tasks to workers...")
         logging.debug(f"Mapped:\n{PrettyLog(task_map_list)}")
@@ -331,16 +342,23 @@ class Master:
         return Status.SUCCESS
 
 if __name__ == '__main__':
-    # Context management protocol, all threads and connections
-    # are automatically closed after it's done
     logging.basicConfig(filename='yacs_master.log', filemode='w', level=logging.DEBUG)
+    config_location = pathlib.Path(__file__).absolute().parent.parent / 'config.json'
 
     # Accepting Scheduling Algorithm
-    schedulers = {"RR": Scheduler.round_robin_scheduler, "LL":Scheduler.least_loaded_scheduler, "R":Scheduler.random_scheduler}
+    schedulers = {
+        "RR": Scheduler.round_robin_scheduler,
+        "LL": Scheduler.least_loaded_scheduler,
+        "R" : Scheduler.random_scheduler
+    }
+
     while True :
-        x = input("Pick a Scheduler :\n1. Round Robin Scheduler (RR)\n2. Random Scheduler (R)\n3. Least Loaded Scheduler (LL)\nEnter choice : ")
+        x = input("Pick a Scheduler :\nRR: Round Robin Scheduler\nR: Random Scheduler\nLL: Least Loaded Scheduler\nEnter choice : ")
         if x in schedulers.keys():
             break
+
     sched_chosen = schedulers[x]
-    with Master('config.json', sched_chosen) as master:
+    # Context management protocol, all threads and connections
+    # are automatically closed after it's done
+    with Master(config_location, sched_chosen) as master:
         master.run()
