@@ -217,9 +217,6 @@ class Master:
 
     def update_worker_params(self, task_map, mode):
         logging.debug("Updating worker information...")
-        # O(n^2) and I don't care (for the lack of time)
-        # Apologies to those reading this code snippet
-        # print(task_map)
         with self.worker_lock:
             for worker in self.workers:
                 if worker['worker_id'] == task_map['worker_id']:
@@ -229,7 +226,6 @@ class Master:
                         worker['free_slot_count'] -= 1
         logging.debug(f"update_worker_params:Workers:\n{PrettyLog(self.workers)}")
 
-    # This part is a bit of a hack, proceed with caution
     # Updates dependencies once tasks are received from the workers
     def update_dependencies(self, task_map):
         task = task_map['task']
