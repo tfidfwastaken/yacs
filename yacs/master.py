@@ -5,7 +5,7 @@ This program runs on the master.
 
 from queue import SimpleQueue
 from signal import signal, SIGINT
-from threading import Thread, Event, Lock
+from threading import Event, Lock, Thread
 import copy
 import csv
 import json
@@ -20,7 +20,7 @@ import time
 
 # TaskPool, the main shared data structure provided
 # by utils.py in this directory
-from utils import TaskPool, Status
+from utils import Status, TaskPool
 
 
 # Just a helper class to make debug logs more readable

@@ -1,7 +1,7 @@
 """Worker"""
 
-from queue import SimpleQueue, Empty
-from threading import Thread, Event
+from queue import SimpleQueue
+from threading import Event, Lock, Thread
 from utils import Status
 import csv
 import json
@@ -21,9 +21,12 @@ class Worker:
         self.master_sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.id = worker_id
         self.conn_info = conn_info
-        self.exec_pool = SimpleQueue()
-        self.slot_count = slot_count
+        self.exec_pool = []
+
         self.exit_command_received = Event()
+        self.tasks_available = Event()
+        self.exec_pool_lock = Lock()
+
         self.task_log = {}
 
     def __enter__(self):
@@ -61,7 +64,10 @@ class Worker:
             self.task_log[task['task_id']]={}
             self.task_log[task['task_id']]['job_id'] = task['job_id']
             self.task_log[task['task_id']]['start'] = time.time()
-            self.exec_pool.put(task)
+            with self.exec_pool_lock:
+                self.exec_pool.append(task)
+            # notify main thread that there are tasks available
+            self.tasks_available.set()
 
     # Informs the master on task success
     def send_task(self, task):
@@ -85,25 +91,25 @@ class Worker:
     def run(self):
         logging.info("Waiting for tasks")
         while not self.exit_command_received.is_set():
-            # get them tasks
-            try:
-                task = self.exec_pool.get(timeout=10)
-            except Empty:
-                if self.exit_command_received.is_set():
-                    print("Exiting...")
-                    break
-                else:
-                    continue
+            completed_tasks = []
+            self.tasks_available.wait()
+            with self.exec_pool_lock:
+                for task in self.exec_pool:
+                    task['duration'] -= 1
+                    if task['duration'] <= 0:
+                        self.exec_pool.remove(task)
+                        completed_tasks.append(task)
+                        logging.info(f"Finished tasks: {task['task_id']} of job {task['job_id']} at {time.time()}")
+                        self.task_log[task['task_id']]['end'] = time.time()
+                        self.record_log(task['task_id'])
             time.sleep(1)
-            task['duration'] -= 1
-            if task['duration'] != 0:
-                self.exec_pool.put(task)
-            else:
-                logging.info(f"Finished task: {task['task_id']} of job {task['job_id']} at {time.time()}")
-                self.task_log[task['task_id']]['end'] = time.time()
-                self.record_log(task['task_id'])
-                logging.info(f"Reporting back to Master...")
+            if self.exec_pool == []:
+                self.tasks_available.wait()
+            logging.info(f"Reporting back to Master...")
+            for task in completed_tasks:
                 status = self.send_task(task)
+        print("Master has exited. Exiting in 10 seconds...")
+        time.sleep(10)
 
 if __name__ == '__main__':
     port = int(sys.argv[1])
