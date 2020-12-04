@@ -70,12 +70,17 @@ if __name__ == '__main__':
     for i in wid_list:
         #fname = input("Log file for "+str(i)+" : ")
         fname = "worker_"+str(i)+".csv"
-        worker_logs[i] = pd.read_csv(fname, header = None)
+        try:
+            worker_logs[i] = pd.read_csv(fname, header = None)
+        except:
+            pass
 
     # Initializing to record the task completion times
     overall_task_comp = []
     # Initializing to record number of tasks per worker
     num_tasks_per_worker = dict()
+    for i in wid_list:
+        num_tasks_per_worker[i] = 0
 
     # Plotting number of tasks per worker against time
     for w in worker_logs:

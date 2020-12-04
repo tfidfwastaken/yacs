@@ -77,7 +77,7 @@ class Worker:
         message = struct.pack('!I', len(message)) + message
         self.master_sock.sendall(message)
         return Status.SUCCESS
- 
+
     # To record the start and finish time of task in csv
     def record_log(self, tid):
         with open(r'worker_'+str(self.id)+'.csv', 'a') as f:
@@ -86,7 +86,7 @@ class Worker:
             start = self.task_log[tid]['start']
             stop = self.task_log[tid]['end']
             writer.writerow([jid,tid,start,stop])
-   
+
     # starts the worker
     def run(self):
         logging.info("Waiting for tasks")
@@ -120,6 +120,7 @@ if __name__ == '__main__':
 
     logging.basicConfig(filename=f'yacs_worker_{worker_id}.log', \
                         filemode='w', level=logging.DEBUG)
+    f = open(r'worker_'+str(worker_id)+'.csv', 'w')
     # make this more robust later
     this_worker = None
     for worker in workers:
@@ -128,3 +129,4 @@ if __name__ == '__main__':
 
     with Worker(('localhost', port), worker_id, this_worker['slots']) as worker:
         worker.run()
+    f.close()
