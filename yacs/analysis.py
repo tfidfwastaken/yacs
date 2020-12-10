@@ -12,6 +12,7 @@ from datetime import datetime, date
 from statistics import mean, median
 import sys
 import json
+import pathlib
 
 def get_pts(w):
     #start = [1,3,4,7]
@@ -55,7 +56,8 @@ if __name__ == '__main__':
     print("Median job completion time = ",job_comp_times.median())
 
     # Using config file to figure out the wids
-    cfg = open('config.json')
+    config_location = pathlib.Path(__file__).absolute().parent.parent / 'config.json'
+    cfg = open(config_location)
     workers = json.load(cfg)['workers']
     wid_list = []
     for w in workers:
