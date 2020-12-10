@@ -8,6 +8,11 @@ git clone https://github.com/tfidfwastaken/yacs
 cd yacs
 ```
 
+Make sure you have the required dependencies.
+```
+pip install -r requirements
+```
+
 A default `config.json` has been provided.
 
 Open five terminals, and `cd` to `yacs` in all of them.  
@@ -20,7 +25,7 @@ python yacs/master.py
 
 Provide the scheduling algorithms at the prompt.
 
-Terminal 2,3 and 4:
+Terminal 2, 3 and 4:
 ```
 python yacs/worker.py <port number> <worker id>
 ```
